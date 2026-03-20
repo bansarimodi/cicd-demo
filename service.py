@@ -1,5 +1,5 @@
 def process_request():
 
-    message = "CI/CD Version 6 working"
+    message = "CI/CD Version Test working"
 
     return message

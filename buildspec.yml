@@ -1,0 +1,51 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: us-east-1
+    IMAGE_REPO_NAME: cicd-demo
+    ECR_REGISTRY: 277894851352.dkr.ecr.us-east-1.amazonaws.com
+
+phases:
+
+  pre_build:
+    commands:
+
+      - echo "Build started on $(date)"
+
+      - echo "Commit ID:"
+      - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      - echo "Logging in to Amazon ECR"
+
+      - aws ecr get-login-password --region $AWS_REGION |
+        docker login --username AWS --password-stdin $ECR_REGISTRY
+
+  build:
+    commands:
+
+      - echo "Building Docker image"
+
+      - docker build -t $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+
+      - docker tag
+        $IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+        $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+  post_build:
+    commands:
+
+      - echo "Build completed on $(date)"
+
+      - echo "Pushing Docker image"
+
+      - docker push $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      - echo "Updating Lambda"
+
+      - aws lambda update-function-code \
+        --function-name cicd-demo \
+        --image-uri $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+artifacts:
+  files:
+    - imagedefinitions.json

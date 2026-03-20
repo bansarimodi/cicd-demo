@@ -27,7 +27,3 @@ phases:
 
       - echo Updating Lambda
       - aws lambda update-function-code --function-name $LAMBDA_FUNCTION --image-uri $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
-
-artifacts:
-  files:
-    - '**/*'

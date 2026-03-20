@@ -8,29 +8,20 @@ env:
     LAMBDA_FUNCTION: cicd-demo
 
 phases:
-
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR
-      - aws --version
+      - echo Logging in to ECR
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
 
   build:
     commands:
-      - echo Build started
-      - docker build -t $IMAGE_REPO_NAME .
-      - docker tag $IMAGE_REPO_NAME:latest $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - echo Building Docker image
+      - docker build -t cicd-demo .
+      - docker tag cicd-demo:latest $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
 
   post_build:
     commands:
-      - echo Pushing Docker image
+      - echo Pushing image
       - docker push $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
-
       - echo Updating Lambda
-      - aws lambda update-function-code \
-        --function-name $LAMBDA_FUNCTION \
-        --image-uri $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
-
-artifacts:
-  files:
-    - '**/*'
+      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION --image-uri $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION

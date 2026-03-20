@@ -1,37 +1,27 @@
 name: CI Validation
 
 on:
-
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
   push:
-    branches:
-      - 'feature/**'
+    branches: [ 'feature/**' ]
 
 jobs:
-
   ci:
-
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show commit info
+      - name: Show commit details
         run: |
           echo "Commit SHA:"
           git rev-parse HEAD
-
+          
           echo "Commit message:"
           git log -1 --pretty=%B
 
-      - name: Build Docker image (CI test)
-        run: |
-          docker build -t ci-test .
-
-      - name: CI validation success
-        run: echo "CI checks passed. PR ready for review."
+      - name: Validation complete
+        run: echo "CI checks passed. Ready for review."

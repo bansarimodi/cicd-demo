@@ -8,7 +8,6 @@ env:
     LAMBDA_FUNCTION: cicd-demo
 
 phases:
-
   pre_build:
     commands:
       - echo "Logging into Amazon ECR"
@@ -29,8 +28,4 @@ phases:
       - docker push $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
 
       - echo "Updating Lambda function"
-      - aws lambda update-function-code \
-        --function-name $LAMBDA_FUNCTION \
-        --image-uri $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION
-
-      - echo "Deployment completed successfully"
+      - aws lambda update-function-code --function-name $LAMBDA_FUNCTION --image-uri $ECR_REGISTRY/$IMAGE_REPO_NAME:$CODEBUILD_RESOLVED_SOURCE_VERSION

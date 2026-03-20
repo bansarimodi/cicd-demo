@@ -1,0 +1,49 @@
+name: CI Build Push Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
+          aws-region: us-east-1
+
+      - name: Login ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 \
+          | docker login \
+          --username AWS \
+          --password-stdin 277894851352.dkr.ecr.us-east-1.amazonaws.com
+
+      - name: Build Docker
+        run: |
+          docker build --platform linux/amd64 -t cicd-demo .
+
+      - name: Tag Image
+        run: |
+          docker tag cicd-demo:latest 277894851352.dkr.ecr.us-east-1.amazonaws.com/cicd-demo:latest
+
+      - name: Push Image
+        run: |
+          docker push 277894851352.dkr.ecr.us-east-1.amazonaws.com/cicd-demo:latest
+
+      - name: Update Lambda
+        run: |
+          aws lambda update-function-code \
+          --function-name cicd-demo \
+          --image-uri 277894851352.dkr.ecr.us-east-1.amazonaws.com/cicd-demo:latest

@@ -1,49 +1,37 @@
-name: CI Build Push Deploy
+name: CI Validation
 
 on:
-  push:
+
+  pull_request:
     branches:
       - main
 
+  push:
+    branches:
+      - 'feature/**'
+
 jobs:
 
-  deploy:
+  ci:
 
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET }}
-          aws-region: us-east-1
-
-      - name: Login ECR
+      - name: Show commit info
         run: |
-          aws ecr get-login-password --region us-east-1 \
-          | docker login \
-          --username AWS \
-          --password-stdin 277894851352.dkr.ecr.us-east-1.amazonaws.com
+          echo "Commit SHA:"
+          git rev-parse HEAD
 
-      - name: Build Docker
-        run: |
-          docker build --platform linux/amd64 -t cicd-demo .
+          echo "Commit message:"
+          git log -1 --pretty=%B
 
-      - name: Tag Image
+      - name: Build Docker image (CI test)
         run: |
-          docker tag cicd-demo:latest 277894851352.dkr.ecr.us-east-1.amazonaws.com/cicd-demo:latest
+          docker build -t ci-test .
 
-      - name: Push Image
-        run: |
-          docker push 277894851352.dkr.ecr.us-east-1.amazonaws.com/cicd-demo:latest
-
-      - name: Update Lambda
-        run: |
-          aws lambda update-function-code \
-          --function-name cicd-demo \
-          --image-uri 277894851352.dkr.ecr.us-east-1.amazonaws.com/cicd-demo:latest
+      - name: CI validation success
+        run: echo "CI checks passed. PR ready for review."

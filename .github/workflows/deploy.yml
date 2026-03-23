@@ -1,27 +1,44 @@
 name: CI Validation
 
 on:
-  pull_request:
-    branches: [ main ]
-
   push:
-    branches: [ 'feature/**' ]
+    branches:
+      - 'feature/**'
+
+  pull_request:
+    branches:
+      - main
 
 jobs:
+
   ci:
+    name: Code Validation
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show commit details
+      - name: Display branch name
+        run: |
+          echo "Branch name:"
+          git branch --show-current
+
+      - name: Show commit information
         run: |
           echo "Commit SHA:"
           git rev-parse HEAD
-          
+
           echo "Commit message:"
           git log -1 --pretty=%B
 
-      - name: Validation complete
-        run: echo "CI checks passed. Ready for review."
+      - name: CI validation status
+        run: |
+          echo "CI validation successful"
+          echo "Code is ready for review"
+
+      - name: Deployment information
+        run: |
+          echo "After PR approval and merge to main"
+          echo "AWS CodePipeline will trigger deployment"

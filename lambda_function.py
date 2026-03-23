@@ -1,10 +1,18 @@
-from service import process_request
+import logging
+
+# Create logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
 
-    result = process_request()
+    logger.info("Lambda execution started")
+
+    message = "CI/CD pipeline deployment successful"
+
+    logger.info("Lambda execution completed successfully")
 
     return {
-        "statusCode":200,
-        "body":result
+        "statusCode": 200,
+        "body": message
     }

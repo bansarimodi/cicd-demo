@@ -11,33 +11,50 @@ phases:
 
   pre_build:
     commands:
+      - echo "================================="
       - echo "PRE-BUILD PHASE STARTED"
       - echo "Logging into Amazon ECR"
+      - echo "================================="
+
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URI
+
       - echo "ECR login successful"
 
   build:
     commands:
+      - echo "================================="
       - echo "BUILD PHASE STARTED"
       - echo "Building Docker image"
+      - echo "================================="
+
       - docker build -t $ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION .
 
       - echo "Tagging Docker image"
-      - docker tag $ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION \
 
-        $ECR_URI/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      
-      - echo "Docker build completed"
+      - docker tag $ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION $ECR_URI/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION
+
+      - echo "Docker build completed successfully"
 
   post_build:
     commands:
+      - echo "================================="
       - echo "DEPLOYMENT PHASE STARTED"
-      - echo "Pushing image to ECR"
+      - echo "================================="
+
+      - echo "Pushing Docker image to ECR"
       - docker push $ECR_URI/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION
 
-      - echo "Updating Lambda with new image"
-      - aws lambda update-function-code \
-        --function-name $LAMBDA_NAME \
-        --image-uri $ECR_URI/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION
-        
-      - echo "Deployment completed successfully"
+      - echo "Waiting for ECR image availability"
+      - sleep 10
+
+      - echo "Updating Lambda function with latest image"
+
+      - aws lambda update-function-code --function-name $LAMBDA_NAME --image-uri $ECR_URI/$ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION --region $AWS_REGION
+
+      - echo "Lambda deployment completed successfully"
+
+      - echo "CI/CD pipeline execution completed"
+
+artifacts:
+  files:
+    - '**/*'
